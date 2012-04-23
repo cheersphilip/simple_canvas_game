@@ -60,20 +60,20 @@ var reset = function () {
 // Update game objects
 var update = function (modifier) {
 	if (38 in keysDown) { // Player holding up
-		hero.y -= hero.speed * modifier * 7;
-		hero.x += hero.speed * modifier * 4;
+		hero.y -= hero.speed * modifier * 4;
+		hero.x += hero.speed * modifier * 7;
 	}
 	if (40 in keysDown) { // Player holding down
-		hero.y += hero.speed * modifier * 7;
-		hero.x -= hero.speed * modifier * 4;
+		hero.y += hero.speed * modifier * 4;
+		hero.x -= hero.speed * modifier * 7;
 	}
 	if (37 in keysDown) { // Player holding left
-		hero.x -= hero.speed * modifier * 4;
-		hero.y -= hero.speed * modifier * 7;
+		hero.x -= hero.speed * modifier * 7;
+		hero.y -= hero.speed * modifier * 4;
 	}
 	if (39 in keysDown) { // Player holding right
-		hero.x += hero.speed * modifier * 4;
-		hero.y += hero.speed * modifier * 7;
+		hero.x += hero.speed * modifier * 7;
+		hero.y += hero.speed * modifier * 4;
 	}
 
 	// Are they touching?
