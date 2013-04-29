@@ -1,9 +1,9 @@
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-canvas.width = 300//document.width-50;
-canvas.height = 300//document.height-50;
-document.body.appendChild(canvas);
+canvas.width = 500//document.width-50;
+canvas.height = 350//document.height-50;
+document.getElementById("main").appendChild(canvas);
 
 //timer 
 var timeLeft = 30;
@@ -32,7 +32,7 @@ var monsterImage = new Image();
 monsterImage.onload = function () {
 	monsterReady = true;
 };
-monsterImage.src = "images/monster.png";
+monsterImage.src = "images/monstersprite.png";
 
 // Game objects
 var hero = {
@@ -41,19 +41,25 @@ var hero = {
 };
 
 
-
 function monster(spin) {
 	this.spin=spin;
-}
+	this.sx=0;
+	this.sy=0;
+	this.sw=30;
+	this.sh=32;
 
+	this.dw=30;
+	this.dh=32;
+}
 
 var monstersArray = [];
 
 //generate monsters
-for (var i = 0; i <= Math.floor(Math.random() + 3); i++) {
+for (var i = 0; i <= 2; i++) {
 	var newMonster = new monster(100);
 	monstersArray.push(newMonster);
 };
+
 
 var monstersCaught = 3;
 
@@ -87,11 +93,11 @@ var update = function (modifier) {
 // timing bit
 
 	countUp += modifier;
-		console.log(countUp);
+		//console.log(countUp);
 	if (countUp >= 1) {
 		countUp = 0;
 		timeLeft-=1;
-		if (timeLeft < 0){
+		if (timeLeft <= 0){
 			alert("Time up! You had " + monstersCaught + " lives left.");
 			monstersCaught = 3;
 			timeLeft = 30;
@@ -140,21 +146,31 @@ var update = function (modifier) {
 		}
 
 		monstersArray[i].spin-=0.1;
-		if (monstersArray[i].spin <=0){
-			monstersArray[i].spin=100;
+
+		if (monstersArray[i].spin < 0) {
+			monstersArray[i].spin=0;
 			--monstersCaught;
-			if (monstersCaught <=0){
-				monstersCaught = 3;
-				timeLeft = 30;
-				alert("You lost! Click to play again :)")
-			}
-			reset();
 		}
+
+		if (monstersCaught < 0){
+			monstersCaught = 3;
+			timeLeft = 30;
+			alert("You lost! Click to play again :)");
+			reset();
+		} 
+
+		// 29/4/2013 - so this bit isn't working - perhaps need a way to remove monsterArray[i] from the array and have it permanently on the canvas as a 'dead' sprite,
+		// or solve this if statement so that it keeps the spin at 0, for the rendering, but doesn't deprecate monstersCought on each tick.
+		
 		if (monstersArray[i].spin >= 100){
 			monstersArray[i].spin = 100;
 			// ++monstersCaught;
 			// reset();
 		}
+
+
+
+
 	}
 
 };
@@ -171,9 +187,22 @@ var render = function () {
 
 	if (monsterReady) {
 
-		// Throw the monsters somewhere on the screen randomly
 		for (i = 0; i < monstersArray.length; i++) {
-			ctx.drawImage(monsterImage, monstersArray[i].x, monstersArray[i].y);
+			
+
+			if (countUp <= 0.5) {
+				monstersArray[i].sx = 30;
+			} else {
+				monstersArray[i].sx = 0;
+			}
+			if (monstersArray[i].spin <= 30) {
+				monstersArray[i].sx += 60;
+			}
+			if (monstersArray[i].spin <= 0) {
+				monstersArray[i].sx = 120;
+			}
+
+			ctx.drawImage(monsterImage, monstersArray[i].sx, monstersArray[i].sy, monstersArray[i].sw, monstersArray[i].sh, monstersArray[i].x, monstersArray[i].y, 30, 32);
 			ctx.fillStyle = "rgba(255,102,51,0.5)";
 			ctx.fillRect(
 				monstersArray[i].x - monstersArray[i].spin/2, 
@@ -197,11 +226,17 @@ var main = function () {
 	var now = Date.now();
 	var delta = now - then;
 	canvas.width = canvas.width;
-	update(delta / 1000); //delta gives an integer of roughly 8 - 24
+	update(delta / 1000); //delta gives an integer of roughly 8 - 24, depending on CPU speed
 	render();
 	then = now;
 };
 
+var waitForInput = function (funk) {
+
+	if (40 in keysDown) { // Player holding down
+
+	}
+}
 
 // the timer function 
 
@@ -223,6 +258,7 @@ var main = function () {
 // Let's play this game!
 reset();
 var then = Date.now();
-setInterval(main, 1); // Execute as fast as possible
+// waitForInput();
+setInterval(main, 1); // wait for input, then execute as fast as possible
 //setInterval(timeLapse, 1000);
 
