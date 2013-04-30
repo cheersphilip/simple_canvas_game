@@ -75,6 +75,9 @@ var reset = function () {
 	hero.x = canvas.width / 2;
 	hero.y = canvas.height / 2;
 
+	monstersCaught = 3;
+	timeLeft = 30;
+
 	//reset the monster arrays
 	monstersArray = [];
 	deadMonsters = [];
@@ -111,8 +114,6 @@ var update = function (modifier) {
 
 		if (timeLeft <= 0){
 			alert("Time up! Well done, you had " + monstersCaught + " lives left.");
-			monstersCaught = 3;
-			timeLeft = 30;
 			reset();
 		}
 	};
@@ -155,27 +156,26 @@ var update = function (modifier) {
 			if (monstersArray[i].spin >= 100){
 				monstersArray[i].spin = 100;
 			}
+
 		} else {
 			//if not, decrease it
 			monstersArray[i].spin-=0.1;
-		}
 		
+			//has a monster lost all its life?
+			if (monstersArray[i].spin <= 0) {
+				--monstersCaught;
+				deadMonsters.push(monstersArray[i]);
+				monstersArray.splice(i,1);
+				
+				//have all the hero's lives gone?
+				if (monstersCaught == 0) {
+					alert("You lost! Click to play again :)");
+					reset();
+				} 
 
-		//has a monster lost all its life?
-		if (monstersArray[i].spin <= 0) {
-			--monstersCaught;
-			deadMonsters.push(monstersArray[i]);
-			monstersArray.splice(i,1);
+			}
+
 		}
-
-		//have all the hero's lives gone?
-		if (monstersCaught == 0) {
-			monstersCaught = 3;
-			timeLeft = 30;
-			alert("You lost! Click to play again :)");
-			reset();
-		} 
-
 		
 	}
 
@@ -188,9 +188,15 @@ var render = function () {
 		//ctx.drawImage(bgImage, 0, 0 );
 	}
 
-	if (heroReady) {
-		ctx.drawImage(heroImage, hero.x, hero.y);
-	}
+	// Score
+	ctx.fillStyle = "rgb(0, 0, 0)";
+	ctx.font = "24px Helvetica";
+	ctx.textAlign = "left";
+	ctx.textBaseline = "top";
+	ctx.fillText("Lives: " + monstersCaught, 32, 10);
+	ctx.fillText("timer: " + timeLeft, 32, 30);
+
+
 
 	if (monsterReady) {
 
@@ -220,19 +226,17 @@ var render = function () {
 
 		if (deadMonsters.length > 0) {
 			for (var j = 0; j < deadMonsters.length; j++) {
-				ctx.drawImage(monsterImage, 120, 0, 30, 32, deadMonsters[i].x, deadMonsters[i].y, 30, 32);
+				ctx.drawImage(monsterImage, 120, 0, 30, 32, deadMonsters[j].x, deadMonsters[j].y, 30, 32);
 			};
 		}
 
 	}
 
-	// Score
-	ctx.fillStyle = "rgb(0, 0, 0)";
-	ctx.font = "24px Helvetica";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.fillText("Lives: " + monstersCaught, 32, 10);
-	ctx.fillText("timer: " + timeLeft, 32, 30);
+
+	if (heroReady) {
+		ctx.drawImage(heroImage, hero.x, hero.y);
+	}
+
 };
 
 // The main game loop
