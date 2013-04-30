@@ -9,6 +9,8 @@ document.getElementById("main").appendChild(canvas);
 var timeLeft = 30;
 var countUp = 0;
 
+//number of lives
+var monstersCaught = 3;
 
 // Background image
 var bgReady = false;
@@ -40,7 +42,6 @@ var hero = {
 	speed: 20 // movement in pixels per second
 };
 
-
 function monster(spin) {
 	this.spin=spin;
 	this.sx=0;
@@ -53,15 +54,8 @@ function monster(spin) {
 }
 
 var monstersArray = [];
+var deadMonsters = [];
 
-//generate monsters
-for (var i = 0; i <= 2; i++) {
-	var newMonster = new monster(100);
-	monstersArray.push(newMonster);
-};
-
-
-var monstersCaught = 3;
 
 // Handle keyboard controls
 var keysDown = {};
@@ -74,10 +68,23 @@ addEventListener("keyup", function (e) {
 	delete keysDown[e.keyCode];
 }, false);
 
-// Reset the game when the player catches a monster
+
+
+// Reset the game when the player loses all their lives or time runs out
 var reset = function () {
 	hero.x = canvas.width / 2;
 	hero.y = canvas.height / 2;
+
+	//reset the monster arrays
+	monstersArray = [];
+	deadMonsters = [];
+
+	//generate monsters
+	for (var i = 0; i <= 2; i++) {
+		var newMonster = new monster(100);
+		monstersArray.push(newMonster);
+	};
+
 
 	// Throw the monsters somewhere on the screen randomly
 	for (i = 0; i < monstersArray.length; i++) {
@@ -87,23 +94,31 @@ var reset = function () {
 	}
 };
 
+
 // Update game objects
 var update = function (modifier) {
 
-// timing bit
+	// timing bit
 
 	countUp += modifier;
 		//console.log(countUp);
+
 	if (countUp >= 1) {
 		countUp = 0;
 		timeLeft-=1;
+
+		//has the time run out?
+
 		if (timeLeft <= 0){
-			alert("Time up! You had " + monstersCaught + " lives left.");
+			alert("Time up! Well done, you had " + monstersCaught + " lives left.");
 			monstersCaught = 3;
 			timeLeft = 30;
 			reset();
 		}
 	};
+
+
+	//are any keys being pressed?
 
 	if (38 in keysDown) { // Player holding up
 		hero.y -= hero.speed * modifier * 4;
@@ -122,61 +137,53 @@ var update = function (modifier) {
 		hero.y += hero.speed * modifier * 4;
 	}
 
-	// Are they touching?
-	// if (
-	// 	hero.x <= (monster.x + 32)
-	// 	&& monster.x <= (hero.x + 32)
-	// 	&& hero.y <= (monster.y + 32)
-	// 	&& monster.y <= (hero.y + 32)
-	// ) {
-	// 	++monstersCaught;
-	// 	reset();
-	// }
 
-	//are any monsters within range?
+	//what are the monsters up to?
 
 	for (i = 0; i < monstersArray.length; i++) {
+		
+		//are any monsters within range of the hero?
+		
 		if (
 			hero.x <= (monstersArray[i].x + hero.range)
 			&& monstersArray[i].x <= (hero.x + hero.range)
 			&& hero.y <= (monstersArray[i].y + hero.range)
 			&& monstersArray[i].y <= (hero.y + hero.range)
 		) {
+			//if they are, increase their life meter, up to 100
 			monstersArray[i].spin+=0.2;
+			if (monstersArray[i].spin >= 100){
+				monstersArray[i].spin = 100;
+			}
+		} else {
+			//if not, decrease it
+			monstersArray[i].spin-=0.1;
 		}
+		
 
-		monstersArray[i].spin-=0.1;
-
-		if (monstersArray[i].spin < 0) {
-			monstersArray[i].spin=0;
+		//has a monster lost all its life?
+		if (monstersArray[i].spin <= 0) {
 			--monstersCaught;
+			deadMonsters.push(monstersArray[i]);
+			monstersArray.splice(i,1);
 		}
 
-		if (monstersCaught < 0){
+		//have all the hero's lives gone?
+		if (monstersCaught == 0) {
 			monstersCaught = 3;
 			timeLeft = 30;
 			alert("You lost! Click to play again :)");
 			reset();
 		} 
 
-		// 29/4/2013 - so this bit isn't working - perhaps need a way to remove monsterArray[i] from the array and have it permanently on the canvas as a 'dead' sprite,
-		// or solve this if statement so that it keeps the spin at 0, for the rendering, but doesn't deprecate monstersCought on each tick.
 		
-		if (monstersArray[i].spin >= 100){
-			monstersArray[i].spin = 100;
-			// ++monstersCaught;
-			// reset();
-		}
-
-
-
-
 	}
 
 };
 
 // Draw everything
 var render = function () {
+
 	if (bgReady) {
 		//ctx.drawImage(bgImage, 0, 0 );
 	}
@@ -189,27 +196,34 @@ var render = function () {
 
 		for (i = 0; i < monstersArray.length; i++) {
 			
-
+			//aminate the walking
 			if (countUp <= 0.5) {
 				monstersArray[i].sx = 30;
 			} else {
 				monstersArray[i].sx = 0;
 			}
+
+			//change colour if life is low
 			if (monstersArray[i].spin <= 30) {
 				monstersArray[i].sx += 60;
 			}
-			if (monstersArray[i].spin <= 0) {
-				monstersArray[i].sx = 120;
-			}
 
+
+			//draw the progress/life/spin bar thing above the monster
 			ctx.drawImage(monsterImage, monstersArray[i].sx, monstersArray[i].sy, monstersArray[i].sw, monstersArray[i].sh, monstersArray[i].x, monstersArray[i].y, 30, 32);
 			ctx.fillStyle = "rgba(255,102,51,0.5)";
-			ctx.fillRect(
-				monstersArray[i].x - monstersArray[i].spin/2, 
-				monstersArray[i].y - monstersArray[i].spin/2, 
-				monstersArray[i].spin, 
-				monstersArray[i].spin);
+			ctx.fillRect(monstersArray[i].x, monstersArray[i].y - 10, monstersArray[i].spin / 3, 5);
 		}
+
+
+		//draw any dead monsters
+
+		if (deadMonsters.length > 0) {
+			for (var j = 0; j < deadMonsters.length; j++) {
+				ctx.drawImage(monsterImage, 120, 0, 30, 32, deadMonsters[i].x, deadMonsters[i].y, 30, 32);
+			};
+		}
+
 	}
 
 	// Score
@@ -231,34 +245,10 @@ var main = function () {
 	then = now;
 };
 
-var waitForInput = function (funk) {
 
-	if (40 in keysDown) { // Player holding down
-
-	}
-}
-
-// the timer function 
-
-// Change this function to be included in the update function, such that a var
-// iterates by delta on each interval. When the var reaches 1000 then timeLeft-=1, 
-// and the var resets to 0.
-// This is more robust when it comes to changing scenes etc.
-
-// var timeLapse = function (){
-// 	timeLeft-=1;
-// 	if (timeLeft < 0){
-// 		alert("Time up! You had " + monstersCaught + " lives left.");
-// 		monstersCaught = 3;
-// 		timeLeft = 30;
-// 		reset();
-// 	}
-// };
 
 // Let's play this game!
 reset();
 var then = Date.now();
-// waitForInput();
-setInterval(main, 1); // wait for input, then execute as fast as possible
-//setInterval(timeLapse, 1000);
+setInterval(main, 1); //execute as fast as possible
 
