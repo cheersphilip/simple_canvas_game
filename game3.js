@@ -1,8 +1,8 @@
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-canvas.width = 500//document.width-50;
-canvas.height = 350//document.height-50;
+canvas.width = 500;
+canvas.height = 400;
 document.getElementById("main").appendChild(canvas);
 
 //game scene
@@ -20,21 +20,28 @@ var score = 0;
 var maxScore = 0;
 var lives = 3;
 
-// Background image
-var bgReady = false;
-var bgImage = new Image();
-bgImage.onload = function () {
-	bgReady = true;
+// Background images
+var bg1Ready = false;
+var bg1Image = new Image();
+bg1Image.onload = function () {
+	bg1Ready = true;
 };
-bgImage.src = "images/background.png";
+bg1Image.src = "images/background3.gif";
 
-// Hero image
+var bg2Ready = false;
+var bg2Image = new Image();
+bg2Image.onload = function () {
+	bg2Ready = true;
+};
+bg2Image.src = "images/background2.gif";
+
+// Hero images
 var heroReady = false;
 var heroImage = new Image();
 heroImage.onload = function () {
 	heroReady = true;
 };
-heroImage.src = "images/hero.png";
+heroImage.src = "images/waiter3.png";
 
 // Monster image
 var monsterReady = false;
@@ -42,7 +49,7 @@ var monsterImage = new Image();
 monsterImage.onload = function () {
 	monsterReady = true;
 };
-monsterImage.src = "images/monstersprite.png";
+monsterImage.src = "images/cups.png";
 
 // Game objects
 var hero = {
@@ -109,6 +116,8 @@ var reset = function () {
 };
 
 
+//various functions to do with the game parameters etc.
+
 var scoreBoard = function() {
 	if (score > maxScore) {
 		maxScore = score;
@@ -117,6 +126,36 @@ var scoreBoard = function() {
 		maxLevel = level;
 	};
 }
+
+var timesUp = function() {
+	//firstly, draw the dialogue box
+	ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+	ctx.fillRect(0,0,500,400);
+
+	ctx.fillStyle = "rgb(250, 250, 250)";
+	ctx.fillRect(100,80,300,240);
+
+	// ctx.fillStyle = "rgb(0, 0, 0)";
+	// ctx.font = "16px Helvetica";
+	// ctx.textAlign = "center";
+	// ctx.textBaseline = "top";
+	// ctx.fillText("A game by cheersphilip.", 250, 370);
+
+	//now look for input and adjust parameters as appropriate
+
+	var r = confirm("Job done!\nYou saved " + monstersArray.length + " cups with " + lives + " lives left\nReady for next level?")
+	if (r==true) {
+		score += monstersArray.length + lives;
+		level++;
+	} else {
+		score += monstersArray.length + lives;
+		scoreBoard();
+		level = 1;
+		scene = 0;
+	}
+	reset();
+}
+
 
 // Update game objects
 var update = function (modifier) {
@@ -144,18 +183,8 @@ var update = function (modifier) {
 
 			//has the time run out?
 
-			if (timeLeft <= 0){
-				var r = confirm("Job done!\nYou saved " + monstersArray.length + " cups with " + lives + " lives left\nReady for next level?")
-				if (r==true) {
-					score += monstersArray.length + lives;
-					level++;
-				} else {
-					score += monstersArray.length + lives;
-					scoreBoard();
-					level = 1;
-					scene = 0;
-				}
-				reset();
+			if (timeLeft <= 10){
+				timesUp();
 			}
 		};
 
@@ -258,53 +287,58 @@ var update = function (modifier) {
 // Draw everything
 var render = function () {
 
-	if (bgReady) {
-		//ctx.drawImage(bgImage, 0, 0 );
-	}
-
 	//start page
 
 	if (scene==0) {
+
+		//background
+		if (bg1Ready) {
+			ctx.drawImage(bg1Image, 0, 0 );
+		}
+
+		//big waiter		
+		if (heroReady) {
+			ctx.drawImage(heroImage, 180, 140, 140, 160);
+		}
 
 		//title
 		ctx.fillStyle = "rgb(0, 0, 0)";
 		ctx.font = "48px Helvetica";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "top";
-		ctx.fillText("Choka", 250, 20);
-		ctx.fillText("Mocha", 250, 80);
+		ctx.fillText("Choka", 250, 10);
+		ctx.fillText("Mocha", 250, 60);
 
 		//subtitle
 		ctx.fillStyle = "rgb(0, 0, 0)";
 		ctx.font = "18px Helvetica";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "top";
-		ctx.fillText("Don't drop the cups!", 250, 140);
-
+		ctx.fillText("Don't drop the cups!", 250, 115);
 
 		//instructions
 		ctx.fillStyle = "rgb(0, 0, 0)";
 		ctx.font = "24px Helvetica";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "top";
-		ctx.fillText("Arrow keys or WASD to move", 250, 240);
-		ctx.fillText("SPACE to start, Esc or X to pause", 250, 270);
+		ctx.fillText("Arrow keys or WASD to move", 250, 300);
+		ctx.fillText("SPACE to start, Esc or X to pause", 250, 330);
 
 		//credits
 		ctx.fillStyle = "rgb(0, 0, 0)";
-		ctx.font = "18px Helvetica";
+		ctx.font = "16px Helvetica";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "top";
-		ctx.fillText("A game by cheersphilip.", 250, 310);
+		ctx.fillText("A game by cheersphilip.", 250, 370);
 
 		//high scores
 		if (maxScore >= 1) {
 			ctx.fillStyle = "rgb(0, 0, 0)";
 			ctx.font = "18px Helvetica";
-			ctx.textAlign = "right";
+			ctx.textAlign = "left";
 			ctx.textBaseline = "top";
-			ctx.fillText("High Score: " + maxScore, 480, 170);
-			ctx.fillText("Max level: " + maxLevel, 480, 195);
+			ctx.fillText("max level: " + maxLevel, 20, 16);
+			ctx.fillText("high score: " + maxScore, 20, 36);
 
 		};
 	
@@ -314,13 +348,17 @@ var render = function () {
 
 	{
 
+		if (bg2Ready) {
+			ctx.drawImage(bg2Image, 0, 0 );
+		}
+
 		// Score
 		ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
 		ctx.font = "24px Helvetica";
 		ctx.textBaseline = "top";
 		ctx.textAlign = "left";
-		ctx.fillText("level: " + level, 30, 10);
-		ctx.fillText("score: " + score, 30, 30);
+		ctx.fillText("level: " + level, 20, 10);
+		ctx.fillText("score: " + score, 20, 30);
 		ctx.textAlign = "right";
 		//go red if only one life left
 		if (lives==1) {
@@ -342,17 +380,23 @@ var render = function () {
 
 			for (i = 0; i < monstersArray.length; i++) {
 				
-				//aminate the walking
-				if (countUp <= 0.5) {
-					monstersArray[i].sx = 30;
-				} else {
+				//aminate the spining
+				if (0 <= countUp < 0.3) {
 					monstersArray[i].sx = 0;
+				} else if (0.3 <= countUp < 0.6) {
+					monstersArray[i].sx = 30;
+				} else if (0.6 <= countUp < 0.9) {
+					monstersArray[i].sx = 60;
+				} else {
+					monstersArray[i].sx = 90;
 				}
 
-				//change colour if life is low
+				//change the spritemap if life is low
 				if (monstersArray[i].spin <= 40) {
-					monstersArray[i].sx += 60;
+					monstersArray[i].sx += 120;
 				}
+
+				//Okay, so all that animating stuff looks pretty rubbish, but, hey - you gotta start somewhere!
 
 
 				//draw the progress/life/spin bar thing above the monster
@@ -366,14 +410,14 @@ var render = function () {
 
 			if (deadMonsters.length > 0) {
 				for (var j = 0; j < deadMonsters.length; j++) {
-					ctx.drawImage(monsterImage, 120, 0, 30, 32, deadMonsters[j].x, deadMonsters[j].y, 30, 32);
+					ctx.drawImage(monsterImage, 240, 0, 30, 32, deadMonsters[j].x, deadMonsters[j].y, 30, 32);
 				};
 			}
 
 		}
 
 		if (heroReady) {
-			ctx.drawImage(heroImage, hero.x, hero.y);
+			ctx.drawImage(heroImage, hero.x, hero.y, 40, 43);
 		}
 
 	}; //end of 'else'
