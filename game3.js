@@ -11,9 +11,11 @@ var level = 1;
 var maxLevel = 0;
 
 
-//timer 
+//timer & game loop setup
 var timeLeft = 15;
 var countUp = 0;
+var then = "";
+var mainLoop = "";
 
 //number of lives, etc.
 var score = 0;
@@ -53,7 +55,7 @@ monsterImage.src = "images/cups.png";
 
 // Game objects
 var hero = {
-	range: 100,
+	range: 50,
 	speed: 20 // movement in pixels per second
 };
 
@@ -73,7 +75,7 @@ var deadMonsters = [];
 
 
 // Handle keyboard controls
-var keysDown = {};
+var keysDown = [];
 
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
@@ -88,7 +90,7 @@ addEventListener("keyup", function (e) {
 // Reset the game when the player loses all their lives or time runs out
 var reset = function () {
 
-	keysDown = {};
+	keysDown = [];
 
 	hero.x = canvas.width / 2;
 	hero.y = canvas.height / 2;
@@ -127,21 +129,59 @@ var scoreBoard = function() {
 	};
 }
 
-var timesUp = function() {
-	//firstly, draw the dialogue box
-	ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-	ctx.fillRect(0,0,500,400);
+var timesUp = function() {    //////////// this bit needs sorting out to remove the pop-up box!
 
-	ctx.fillStyle = "rgb(250, 250, 250)";
-	ctx.fillRect(100,80,300,240);
+	// clearInterval(mainLoop);
+	// keysDown = [];
+	// canvas.width = canvas.width;
+
+	//firstly, draw the dialogue box
+
+	// ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+	// ctx.fillRect(0,0,500,400);
+
+	// ctx.fillStyle = "rgb(250, 250, 250)";
+	// ctx.shadowBlur = 10;
+	// ctx.shadowOffsetX = 5;
+	// ctx.shadowOffsetY = 5;
+	// ctx.shadowColor = "grey";
+	// ctx.fillRect(100,80,300,140);
 
 	// ctx.fillStyle = "rgb(0, 0, 0)";
+	// ctx.shadowBlur = 0;
+	// ctx.shadowOffsetX = 0;
+	// ctx.shadowOffsetY = 0;
 	// ctx.font = "16px Helvetica";
 	// ctx.textAlign = "center";
 	// ctx.textBaseline = "top";
-	// ctx.fillText("A game by cheersphilip.", 250, 370);
+	// ctx.fillText("Job done!", 250, 90);
+	// ctx.fillText("You saved " + monstersArray.length + " cups with " + lives + " lives left.", 250, 120);
+	// ctx.fillText("Ready for next level?", 250, 150);
+	// ctx.fillText("SPACE to continue, Esc to exit.", 250, 180);
 
 	//now look for input and adjust parameters as appropriate
+
+// console.log(keysDown.length);
+
+// do {
+	// if (27 in keysDown) { // Player holding Esc
+	// 	score += monstersArray.length + lives;
+	// 	scoreBoard();
+	// 	level = 1;
+	// 	scene = 0;
+	// 	reset();
+	// 	then = Date.now();
+	// 	mainLoop = setInterval(main, 1); //execute as fast as possible
+	// };
+
+	// if (160 in keysDown || 32 in keysDown) { // Player holding space
+	// 	score += monstersArray.length + lives;
+	// 	level++;
+	// 	reset();
+	// 	then = Date.now();
+	// 	mainLoop = setInterval(main, 1); //execute as fast as possible
+	// };
+// } while (keysDown.length==0);
 
 	var r = confirm("Job done!\nYou saved " + monstersArray.length + " cups with " + lives + " lives left\nReady for next level?")
 	if (r==true) {
@@ -152,9 +192,28 @@ var timesUp = function() {
 		scoreBoard();
 		level = 1;
 		scene = 0;
+		score = 0;
 	}
 	reset();
-}
+};
+
+var youDead = function () {
+	scoreBoard();
+	level = 1;
+	scene = 0;
+	alert("You dead!\nBreak all my CUP");
+	reset();
+};
+
+var pauseGame = function () {
+	var q = confirm("You pressed 'escape'.\nDo you really want to quit?")
+	if (q==true) {
+		scene = 0;
+		reset();
+	} else {
+		keysDown = {};
+	}
+};
 
 
 // Update game objects
@@ -183,7 +242,7 @@ var update = function (modifier) {
 
 			//has the time run out?
 
-			if (timeLeft <= 10){
+			if (timeLeft <= 0){
 				timesUp();
 			}
 		};
@@ -209,13 +268,7 @@ var update = function (modifier) {
 		}
 
 		if (88 in keysDown || 120 in keysDown || 27 in keysDown) { // Player holding X, x or Esc
-			var q = confirm("You pressed 'escape'.\nDo you really want to quit?")
-			if (q==true) {
-				scene = 0;
-				reset();
-			} else {
-				keysDown = {};
-			}
+			pauseGame();
 		};
 
 		// make sure the hero has not gone out of bounds
@@ -241,10 +294,10 @@ var update = function (modifier) {
 			//are any monsters within range of the hero?
 			
 			if (
-				hero.x <= (monstersArray[i].x + hero.range)
-				&& monstersArray[i].x <= (hero.x + hero.range)
-				&& hero.y <= (monstersArray[i].y + hero.range)
-				&& monstersArray[i].y <= (hero.y + hero.range)
+				hero.x + 15 <= (monstersArray[i].x + hero.range)
+				&& monstersArray[i].x <= (hero.x + 15 + hero.range)
+				&& hero.y + 16 <= (monstersArray[i].y + hero.range)
+				&& monstersArray[i].y <= (hero.y + 16 + hero.range)
 			) {
 				//if they are, increase their life meter, up to 100
 				monstersArray[i].spin+=0.2;
@@ -264,11 +317,7 @@ var update = function (modifier) {
 					
 					//have all the hero's lives gone?
 					if (lives==0) {
-						scoreBoard();
-						level = 1;
-						scene = 0;
-						alert("You dead!\nBreak all my CUP");
-						reset();
+						youDead();
 					} 
 
 				}
@@ -349,7 +398,7 @@ var render = function () {
 	{
 
 		if (bg2Ready) {
-			ctx.drawImage(bg2Image, 0, 0 );
+			ctx.drawImage(bg2Image, 0, 0 ); //could well do this with createRadialGradient and createPattern. Next time!
 		}
 
 		// Score
@@ -429,17 +478,18 @@ var main = function () {
 	var now = Date.now();
 	var delta = now - then;
 	canvas.width = canvas.width;
-	update(delta / 1000); //delta gives an integer of roughly 8 - 24, depending on CPU speed
+	update(delta / 1000); //delta seems to return an integer of roughly 8 - 24, depending on CPU speed
 	render();
 	then = now;
 };
 
 
-
 // Let's play this game!
 
-
 reset();
-var then = Date.now();
-setInterval(main, 1); //execute as fast as possible
+then = Date.now();
+mainLoop = setInterval(main, 1); //execute as fast as possible
+
+
+
 
